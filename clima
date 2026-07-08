@@ -1,0 +1,33 @@
+module.exports = async function handler(req, res) {
+  const cidade = req.query.city || "São Paulo";
+  const url = `https://wttr.in/${encodeURIComponent(cidade)}?format=j1`;
+
+  try {
+    const resposta = await fetch(url);
+    const dados = await resposta.json();
+
+    const hoje = dados.weather[0];
+    const max = hoje.maxtempC;
+    const min = hoje.mintempC;
+
+    const clima = dados.current_condition[0].weatherDesc[0].value.toLowerCase();
+
+    let emoji = "🌤️";
+    if (clima.includes("rain")) emoji = "🌧️";
+    if (clima.includes("cloud")) emoji = "☁️";
+    if (clima.includes("clear")) emoji = "☀️";
+    if (clima.includes("snow")) emoji = "❄️";
+    if (clima.includes("thunder")) emoji = "⛈️";
+
+    const area = dados.nearest_area[0];
+    const cidadeNome = area.areaName[0].value;
+    const pais = area.country[0].value;
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.status(200).send(
+      `${emoji} ${cidadeNome}: ${pais} Máx ${max}°C | Mín ${min}°C 🌡️`
+    );
+  } catch (err) {
+    res.status(200).send("❌ Não consegui encontrar essa cidade.");
+  }
+};
